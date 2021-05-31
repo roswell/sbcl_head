@@ -212,6 +212,11 @@ exec ros -Q -- $0 "$@"
    (declare (ignore args))
    (format t "~A~%" (release-tag_name))))
 
+(export
+ (defun os (args)
+   (declare (ignore args))
+   (format t "~A~%" (roswell.util:uname))))
+
 (defvar *sh* nil)
 (defvar *var* nil)
 

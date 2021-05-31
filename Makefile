@@ -17,6 +17,6 @@ upload-hash: hash lasthash
 	diff -u hash lasthash || VERSION=$(VERSION) ros web.ros upload-hash
 
 version:
-	echo $(VERSION)
+	@echo $(LAST_VERSION) > version
 clean:
 	rm hash lasthash
