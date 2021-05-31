@@ -35,4 +35,4 @@ jobs:
           GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ARCH: ${{ matrix.target }}
         run: |
-          make latest-version compile archive upload-archive;
+          make -f Build latest-version compile archive upload-archive;
