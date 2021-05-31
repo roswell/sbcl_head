@@ -29,7 +29,12 @@ unix-archive: show
 	bzip2 sbcl-$(VERSION)-$(ARCH)-$(OS)$(SUFFIX)-binary.tar
 
 windows-archive: show
-	echo windows-archive
+	cd sbcl;bash make-windows-installer.sh
+	echo $(VERSION)-$(ARCH)-windows$(SUFFIX)-binary > sbcl/output/version.txt
+	cd sbcl/output;"$$WIX/bin/light" sbcl.wixobj \
+	  -ext "$$WIX/bin/WixUIExtension.dll" -cultures:en-us \
+	  -out sbcl-`cat version.txt`.msi
+	cd sbcl/output;mv sbcl-`cat version.txt`.msi ../..
 
 pull-docker:
 	docker pull $(DOCKER_REPO)/$$(cat ./tools-for-build/$(IMAGE)/Name);
