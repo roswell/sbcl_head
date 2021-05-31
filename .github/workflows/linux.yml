@@ -69,7 +69,7 @@ jobs:
           IMAGE: ${{ matrix.image }}
         run: |
           curl -L https://raw.githubusercontent.com/roswell/roswell/release/scripts/install-for-ci.sh | sh
-          ros install snmsts/sn.github
+          ros install snmsts/sn.github roswell/sbcl_bin
           docker login docker.pkg.github.com -u snmsts -p $GITHUB_OAUTH_TOKEN;
           make -f Build pull-docker
       - name: build
