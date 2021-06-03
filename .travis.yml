@@ -64,10 +64,10 @@ install:
 
 script:
   - if [ -n "$IMAGE" ]; then
-      ACTION=compile $MAKE -f Build latest-version docker
-      ACTION=archive $MAKE -f Build latest-version docker
+      ACTION=compile $MAKE -f Build latest-version docker;
+      ACTION=archive $MAKE -f Build latest-version docker;
     else
-      $SETARCH $MAKE -f Build latest-version compile archive
+      $SETARCH $MAKE -f Build latest-version compile archive;
     fi
 after_success:
   - $SETARCH $MAKE -f Build latest-version upload-archive
