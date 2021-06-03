@@ -33,6 +33,7 @@ jobs:
         env:
           - LISP=sbcl-bin/2.1.2
           - MAKE=gmake
+          - ARCH=x86-64
       - os: freebsd
         env:
           - LISP=sbcl-bin/2.1.2
