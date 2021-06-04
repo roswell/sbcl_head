@@ -1,4 +1,7 @@
 # -*- mode:Makefile -*-
+-include .env
+export $(shell sed 's/=.*//' .env)
+
 SUFFIX ?=
 ARCH ?= 
 OS ?= `ros web.ros os`
