@@ -70,5 +70,9 @@ script:
     else
       $SETARCH $MAKE -f Build latest-version compile archive;
     fi
+  - pwd
+  - ls -al
 after_success:
+  - pwd
+  - ls -al
   - $SETARCH $MAKE -f Build latest-version upload-archive
