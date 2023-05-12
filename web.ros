@@ -219,8 +219,13 @@ exec ros -Q -- $0 "$@"
          (cond ((probe-file path)
                 (multiple-value-bind (user repo)
                     (account)
+                  (uiop:symbol-call :roswell.github.utils
+                                    :ensure-release-exists
+                                    version
+                                    :owner user
+                                    :repo repo)
                   (uiop:symbol-call :roswell.github.utils :github
-                                    path version user repo t)))
+                                    path version user repo nil)))
                (t
                 (format t "file not found:~A~%" path)
                 (uiop:quit 1))))))))
