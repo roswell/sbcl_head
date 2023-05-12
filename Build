@@ -51,7 +51,7 @@ docker:
 		-e SUFFIX=$(SUFFIX) \
 		-e CFLAGS=$(CFLAGS) \
 		-e LINKFLAGS=$(LINKFLAGS) \
-		$(DOCKER_REPO)/$$(cat ./tools-for-build/$(IMAGE)/Name) \
+		$(DOCKER_REPO)/$$(cat ./tools-for-build/$(IMAGE)/Name)$(DOCKER_IMAGE_SUFFIX) \
 		bash \
 		-c "cd /tmp;make -f $(MAKEFILE_JUSTNAME) $(ACTION)"
 
