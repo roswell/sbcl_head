@@ -10,40 +10,49 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         lisp: [sbcl-bin/2.0.0]
         target: [x86-64, x86]
         suffix: ['']
         image: ['glibc2.19-sbcl2.0.0']
+        docker-platform: [linux/amd64]
         include:
           - lisp: sbcl-bin/2.0.0
             target: x86-64
             image: 'glibc2.31-sbcl2.1.4'
+            docker-platform: 'linux/amd64'
             suffix: -glibc2.31
           - lisp: sbcl-bin/2.0.0
             target: x86
             image: 'glibc2.31-sbcl2.1.4'
+            docker-platform: 'linux/amd64'
             suffix: -glibc2.31
           - lisp: sbcl-bin/2.0.0
             target: x86-64
             image: 'musl1.2.2-sbcl2.0.5'
+            docker-platform: 'linux/amd64'
             suffix: -musl
           - lisp: sbcl-bin/2.0.0
             target: x86
             image: 'i386-musl1.2.2-sbcl2.0.5'
+            docker-platform: 'linux/386'
             suffix: -musl
           - lisp: sbcl-bin/2.0.0
             target: x86
             image: 'i386-musl1.1.24-sbcl2.0.5'
+            docker-platform: 'linux/386'
             suffix: -musl1.1
           - lisp: sbcl-bin/2.0.0
             target: x86-64
-            image: 'glibc2.10-sbcl1.5.7'
+            image: 'glibc2.10-sbcl2.0.5-gcc5.5'
+            docker-platform: 'linux/amd64'
             suffix: -glibc2.10
             linkflags: -lrt
           - lisp: sbcl-bin/2.0.0
             target: x86
-            image: 'glibc2.10-sbcl1.5.7'
+            image: 'glibc2.10-sbcl2.0.5'
+            docker-platform: 'linux/amd64'
             suffix: -glibc2.10
             linkflags: -lrt
 
@@ -51,7 +60,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
       - name: setenv
         run: |
           echo "$HOME/.roswell/bin" >> $GITHUB_PATH
@@ -67,6 +75,8 @@ jobs:
           LISP: ${{ matrix.lisp }}
           GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE: ${{ matrix.image }}
+          DOCKER_PLATFORM: ${{ matrix.docker-platform }}
+          DOCKER_IMAGE_SUFFIX: ${{ matrix.docker-image-suffix }}
         run: |
           curl -L https://raw.githubusercontent.com/roswell/roswell/release/scripts/install-for-ci.sh | sh
           ros install snmsts/sn.github roswell/sbcl_bin
@@ -79,6 +89,8 @@ jobs:
           IMAGE: ${{ matrix.image }}
           SUFFIX: ${{ matrix.suffix }}
           LINKFLAGS: ${{ matrix.linkflags }}
+          DOCKER_PLATFORM: ${{ matrix.docker-platform }}
+          DOCKER_IMAGE_SUFFIX: ${{ matrix.docker-image-suffix }}
         run: |
           ACTION=compile make -f Build latest-version docker
           ACTION=archive make -f Build latest-version docker
