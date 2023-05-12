@@ -40,7 +40,7 @@ windows-archive: show
 	cd sbcl/output;mv sbcl-`cat version.txt`.msi ../..
 
 pull-docker:
-	docker pull $(DOCKER_REPO)/$$(cat ./tools-for-build/$(IMAGE)/Name);
+	docker pull $(DOCKER_REPO)/$$(cat ./tools-for-build/$(IMAGE)/Name)$(DOCKER_IMAGE_SUFFIX);
 
 docker:
 	docker run \
