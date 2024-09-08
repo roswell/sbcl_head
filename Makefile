@@ -11,20 +11,23 @@ TSV_FILE=sbcl-bin_uri.tsv
 hash:
 	git ls-remote --heads $(ORIGIN_URI) $(ORIGIN_REF) |sed -r "s/^([0-9a-fA-F]*).*/\1/" > hash
 
-lasthash:
+lasthash: web.ros
 	curl -sSL -o lasthash $(GITHUB)/releases/download/$(LAST_VERSION)/hash
 
-upload-hash: hash lasthash
+upload-hash: hash lasthash web.ros
 	diff -u hash lasthash || VERSION=$(VERSION) ros web.ros upload-hash
 
-tsv:
+tsv: web.ros
 	TSV_FILE=$(TSV_FILE) ros web.ros tsv
 
-upload-tsv:
+upload-tsv: web.ros
 	TSV_FILE=$(TSV_FILE) ros web.ros upload-tsv
 
-version:
+version: web.ros
 	@echo $(LAST_VERSION) > version
+web.ros:
+	curl -L -O https://raw.githubusercontent.com/roswell/sbcl_bin/master/web.ros
+
 clean:
 	rm -f hash lasthash
 
