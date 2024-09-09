@@ -1,3 +1,4 @@
+#sbcl_head
 -include .env
 export $(shell sed 's/=.*//' .env)
 
@@ -14,8 +15,10 @@ hash:
 lasthash: web.ros
 	curl -sSL -o lasthash $(GITHUB)/releases/download/$(LAST_VERSION)/hash
 
-upload-hash: hash lasthash web.ros
-	diff -u hash lasthash || VERSION=$(VERSION) ros web.ros upload-hash
+tag: hash web.ros
+	($(MAKE) lasthash  && diff -u hash lasthash) || \
+	( VERSION=$(VERSION) ros web.ros upload-hash; \
+	  VERSION=files ros web.ros upload-hash)
 
 tsv: web.ros
 	TSV_FILE=$(TSV_FILE) ros web.ros tsv
@@ -31,3 +34,5 @@ web.ros:
 clean:
 	rm -f hash lasthash
 
+table:
+	ros web.ros table
