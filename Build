@@ -9,6 +9,10 @@ SBCL_OPTIONS ?=--with-sb-core-compression
 LISP_IMPL ?= ros -L sbcl-bin without-roswell=t --no-rc run
 MAKEFILE_JUSTNAME := $(firstword $(MAKEFILE_LIST))
 DOCKER_REPO ?= docker.pkg.github.com/roswell/sbcl_bin
+ZSTD_BRANCH ?= v1.5.6
+
+zstd:
+	git clone --depth 5 https://github.com/facebook/zstd --branch=$(ZSTD_BRANCH)
 
 compile: show
 	@[ -n "$(VERSION)" ] || (echo version should be set; false)
