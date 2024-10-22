@@ -45,11 +45,9 @@ tag: hash lasthash web.ros
 	@echo lasthash = $(shell cat lasthash)
 	cp hash $(shell cat hash)
 	diff -u hash lasthash || \
-	( VERSION=$(VERSION) FILE=hash ros web.ros upload-archive; \
-	  VERSION=$(VERSION) FILE=$(shell cat hash) ros web.ros upload-archive; \
-	  VERSION=$(VERSION) FILE=hash ros web.ros upload-archive; \
-	  VERSION=$(VERSION) FILE=$(shell cat hash) ros web.ros upload-archive; \
-	  VERSION=files FILE=hash ros web.ros upload-archive)
+	( VERSION=$(VERSION) ros web.ros upload hash; \
+	  VERSION=$(VERSION) ros web.ros upload $(shell cat hash); \
+	  VERSION=files ros web.ros upload hash)
 
 clean:
 	rm -f hash lasthash
