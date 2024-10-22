@@ -43,7 +43,7 @@ lasthash: web.ros
 tag: hash lasthash web.ros
 	@echo hash     = $(shell cat hash)
 	@echo lasthash = $(shell cat lasthash)
-	touch $(shell cat hash)
+	cp hash $(shell cat hash)
 	diff -u hash lasthash || \
 	( VERSION=$(VERSION) FILE=hash ros web.ros upload-archive; \
 	  VERSION=$(VERSION) FILE=$(shell cat hash) ros web.ros upload-archive; \
