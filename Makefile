@@ -65,6 +65,11 @@ clean:
 	rm -f verson branch
 	ls |grep sbcl |xargs rm -rf
 	rm -f hash lasthash
+show:
+	@echo VERSION=$(VERSION) ARCH=$(ARCH) BRANCH=$(BRANCH) SUFFIX=$(SUFFIX) HASH=$(HASH)
+	cc -x c -v -E /dev/null || true
+	cc -print-search-dirs || true
+
 #sbcl
 compile: show
 	@[ -n "$(VERSION)" ] || (echo version should be set; false)
