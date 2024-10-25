@@ -8,7 +8,9 @@ WEB_ROS_URI=https://raw.githubusercontent.com/roswell/sbcl_bin/master/web.ros
 
 ORIGIN_URI=https://github.com/sbcl/sbcl
 ORIGIN_REF=master
-GITHUB=https://github.com/roswell/sbcl_head
+GITHUB=https://github.com/$(GITHUB_REPOSITORY)
+
+ZSTD_BRANCH ?= v1.5.6
 
 #version
 version: web.ros
@@ -34,6 +36,11 @@ table: web.ros
 upload-archive: web.ros
 	VERSION=$(VERSION) TARGET=$(ARCH) SUFFIX=$(SUFFIX) ros web.ros upload-archive
 #tag
+mirror-uris:
+	curl -L http://sbcl.org/platform-table.html | grep http|awk -F '"' '{print $$2}'|grep binary > $@
+mirror:
+	METHOD=mirror ros run -l Lakefile
+
 hash:
 	git ls-remote --heads $(ORIGIN_URI) $(ORIGIN_REF) |sed -r "s/^([0-9a-fA-F]*).*/\1/" > hash
 
@@ -49,5 +56,50 @@ tag: hash lasthash web.ros
 	  VERSION=$(VERSION) ros web.ros upload $(shell cat hash); \
 	  VERSION=files ros web.ros upload hash)
 
+#zstd
+zstd:
+	git clone --depth 5 https://github.com/facebook/zstd --branch=$(ZSTD_BRANCH)
+
 clean:
+	rm -rf zstd
+	rm -f verson branch
+	ls |grep sbcl |xargs rm -rf
 	rm -f hash lasthash
+#sbcl
+compile: show
+	@[ -n "$(VERSION)" ] || (echo version should be set; false)
+	rm -rf sbcl
+	git clone --depth 100 https://github.com/sbcl/sbcl --branch=master
+	cd sbcl;git checkout `cat ../lasthash`
+	cd sbcl;echo '"$(VERSION)-daily"' > version.lisp-expr
+	cd sbcl;bash make.sh $(SBCL_OPTIONS) --arch=$(ARCH) --xc-host="$(LISP_IMPL)" || true
+	cd sbcl;bash run-sbcl.sh --eval "(progn (print *features*)(terpri)(quit))"
+archive:
+	if [ -n "$$WIX" ] ; then \
+	  VERSION=$(VERSION) ARCH=$(ARCH) OS=$(OS) SUFFIX=$(SUFFIX) make -f $(MAKEFILE_JUSTNAME) windows-archive; \
+	else \
+	  VERSION=$(VERSION) ARCH=$(ARCH) SUFFIX=$(SUFFIX) make -f $(MAKEFILE_JUSTNAME) unix-archive; \
+	fi
+
+unix-archive: show
+	ln -s sbcl `pwd`/sbcl-$(VERSION)-$(ARCH)-$(OS)$(SUFFIX)
+	./sbcl/binary-distribution.sh sbcl-$(VERSION)-$(ARCH)-$(OS)$(SUFFIX)
+	rm -f sbcl-$(VERSION)-$(ARCH)-$(OS)$(SUFFIX)-binary.tar.bz2
+	bzip2 sbcl-$(VERSION)-$(ARCH)-$(OS)$(SUFFIX)-binary.tar
+
+windows-archive: show
+	cd sbcl;bash make-windows-installer.sh
+	echo $(VERSION)-$(ARCH)-windows$(SUFFIX)-binary > sbcl/output/version.txt
+	cd sbcl/output;"$$WIX/bin/light" sbcl.wixobj \
+	  -ext "$$WIX/bin/WixUIExtension.dll" -cultures:en-us \
+	  -out sbcl-`cat version.txt`.msi
+	cd sbcl/output;mv sbcl-`cat version.txt`.msi ../..
+
+
+upload-archive: show
+	VERSION=$(VERSION) TARGET=$(ARCH) SUFFIX=$(SUFFIX) ros web.ros upload-archive
+
+latest-version: lasthash version
+	$(eval VERSION := $(shell cat version))
+	$(eval HASH := $(shell cat lasthash))
+	@echo "set version $(VERSION):$(HASH)"
