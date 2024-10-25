@@ -86,9 +86,9 @@ compile: show
 	cd sbcl;bash run-sbcl.sh --eval "(progn (print *features*)(terpri)(quit))"
 archive:
 	if [ -n "$$WIX" ] ; then \
-	  VERSION=$(VERSION) ARCH=$(ARCH) OS=$(OS) SUFFIX=$(SUFFIX) make -f $(MAKEFILE_JUSTNAME) windows-archive; \
+	  VERSION=$(VERSION) ARCH=$(ARCH) OS=$(OS) SUFFIX=$(SUFFIX) make windows-archive; \
 	else \
-	  VERSION=$(VERSION) ARCH=$(ARCH) SUFFIX=$(SUFFIX) make -f $(MAKEFILE_JUSTNAME) unix-archive; \
+	  VERSION=$(VERSION) ARCH=$(ARCH) SUFFIX=$(SUFFIX) make unix-archive; \
 	fi
 
 unix-archive: show
