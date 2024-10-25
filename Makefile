@@ -10,6 +10,11 @@ ORIGIN_URI=https://github.com/sbcl/sbcl
 ORIGIN_REF=master
 GITHUB=https://github.com/$(GITHUB_REPOSITORY)
 
+SUFFIX ?=
+SBCL_OPTIONS ?=--fancy
+SBCL_PATCH ?=
+LISP_IMPL ?= ros -L sbcl-bin without-roswell=t --no-rc run
+
 ZSTD_BRANCH ?= v1.5.6
 
 #version
