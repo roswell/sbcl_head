@@ -1,37 +1,29 @@
-name: windows
+name: Windows
 
 on:
-  push:
-    tags:
-      - '*'
   schedule:
     - cron:  '0 1 * * *'
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
-  build-windows:
+  build-win64:
     runs-on: windows-latest
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
-        arch: [x86_64, i686]
+        arch: [x86_64]
         include:
         - arch: x86_64
           arch2: amd64
           bit: 64
           target: x86-64
-        - arch: i686
-          arch2: i686
-          bit: 32
-          target: x86
     env:
       LISP: sbcl-bin
       RESULT_NAME: windows-${{ matrix.arch2 }}
       RESULT_PATH: windows-${{ matrix.arch2 }}
       RESULT_PATH_SUB: roswell
-      SBCL_OPTIONS: 
+      SBCL_OPTIONS: --fancy
       ARCH: ${{ matrix.target }}
       VERSION: ${{ secrets.VERSION }}
       GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -40,8 +32,8 @@ jobs:
 
     steps:
     - run: git config --global core.autocrlf false
-    - uses: actions/checkout@v2
-    - uses: msys2/setup-msys2@v2
+    - uses: actions/checkout@v4
+    - uses: msys2/setup-msys2@v2.17.0
       with:
         msystem: MINGW${{ matrix.bit }}
         path-type: inherit
@@ -64,4 +56,87 @@ jobs:
     - name: build sbcl
       shell: msys2 {0}
       run: |
-        make -f Build latest-version compile archive upload-archive;
+        make zstd
+        find /mingw64 | grep zstd
+        rm /mingw64/lib/libzstd.dll.a
+        mv /mingw64/bin/libzstd.dll /mingw64/bin/libzstd.dll_
+        bash -c 'cd zstd/lib;make CFLAGS="-fPIC" libzstd.a-release;cp libzstd.a /mingw64/lib;cp *.h /mingw64/include'
+        if [ "$VERSION" = "" ]; then
+          OS=windows make latest-version compile archive;
+        else
+          OS=windows make compile archive;
+        fi
+    - name: upload
+      shell: msys2 {0}
+      run: |
+        ls
+        if [ "$VERSION" = "" ]; then
+          make latest-version upload-archive;
+        else
+          make upload-archive;
+        fi
+
+  build-win32:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [i686]
+        include:
+        - arch: i686
+          arch2: i686
+          bit: 64
+          target: x86
+    env:
+      LISP: sbcl-bin
+      RESULT_NAME: windows-${{ matrix.arch2 }}
+      RESULT_PATH: windows-${{ matrix.arch2 }}
+      RESULT_PATH_SUB: roswell
+      SBCL_OPTIONS:
+      ARCH: ${{ matrix.target }}
+      VERSION: ${{ secrets.VERSION }}
+      GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    environment: SET_VERSION
+
+    steps:
+    - run: git config --global core.autocrlf false
+    - uses: actions/checkout@v4
+    - uses: msys2/setup-msys2@v2.17.0
+      with:
+        msystem: MINGW${{ matrix.bit }}
+        path-type: inherit
+        release: true
+        update: true
+        install: 'base-devel mingw-w64-${{ matrix.arch }}-toolchain curl unzip'
+    - name: Run MSYS2 once
+      shell: msys2 {0}
+      run: |
+        pwd
+        echo $MSYSTEM
+        echo $MSYS2_PATH_TYPE
+        echo $PATH
+    - name: install roswell
+      shell: msys2 {0}
+      run: |
+        gcc -v
+        curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
+        ros install snmsts/sn.github
+    - name: build sbcl
+      shell: msys2 {0}
+      run: |
+        if [ "$VERSION" = "" ]; then
+          PATH=/mingw32/bin:$PATH make latest-version compile;
+        else
+          PATH=/mingw32/bin:$PATH make compile;
+        fi
+    - name: upload
+      shell: msys2 {0}
+      run: |
+        ls
+        if [ "$VERSION" = "" ]; then
+          make latest-version archive upload-archive;
+        else
+          make archive upload-archive;
+        fi
