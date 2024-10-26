@@ -110,13 +110,6 @@ compile-9:
 	readelf -d sbcl/src/runtime/sbcl || \
 	true
 
-archive:
-	if [ -n "$$WIX" ] ; then \
-	  VERSION=$(VERSION) ARCH=$(ARCH) OS=$(OS) SUFFIX=$(SUFFIX) make windows-archive; \
-	else \
-	  VERSION=$(VERSION) ARCH=$(ARCH) SUFFIX=$(SUFFIX) make unix-archive; \
-	fi
-
 latest-version: version lasthash
 	$(eval VERSION := $(shell cat version))
 	$(eval HASH := $(shell cat lasthash))
