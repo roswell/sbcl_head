@@ -4,7 +4,7 @@ export $(shell sed 's/=.*//' .env)
 
 VERSION ?= $(shell date +%y.%-m.%-d)
 TSV_FILE ?= sbcl-bin_uri.tsv
-WEB_ROS_URI=https://raw.githubusercontent.com/roswell/sbcl_bin/master/web.ros
+ROS_URI=https://raw.githubusercontent.com/roswell/sbcl_bin/master/
 
 ORIGIN_URI=https://github.com/sbcl/sbcl
 ORIGIN_REF=master
@@ -26,7 +26,9 @@ branch: version
 latest-uris: web.ros
 	ros web.ros latests
 web.ros:
-	curl -L -O $(WEB_ROS_URI)
+	curl -L -O $(ROS_URI)/web.ros
+build.ros:
+	curl -L -O $(ROS_URI)/build.ros
 #tsv
 tsv: web.ros
 	TSV_FILE=$(TSV_FILE) ros web.ros tsv
@@ -40,6 +42,8 @@ table: web.ros
 #archive
 upload-archive: web.ros
 	VERSION=$(VERSION) TARGET=$(ARCH) SUFFIX=$(SUFFIX) ros web.ros upload-archive
+archive: build.ros
+	VERSION=$(VERSION) ARCH=$(ARCH) SUFFIX=$(SUFFIX) ros build.ros archive
 #tag
 mirror-uris:
 	curl -L http://sbcl.org/platform-table.html | grep http|awk -F '"' '{print $$2}'|grep binary > $@
@@ -49,8 +53,8 @@ mirror:
 hash:
 	git ls-remote --heads $(ORIGIN_URI) $(ORIGIN_REF) |sed -r "s/^([0-9a-fA-F]*).*/\1/" > hash
 
-lasthash: web.ros
-	curl -sSL -o lasthash $(GITHUB)/releases/download/files/hash || touch lasthash
+lasthash:
+	curl -sSL -o lasthash $(GITHUB)/releases/download/files/hash || true
 
 tag: hash lasthash web.ros
 	@echo hash     = $(shell cat hash)
@@ -113,21 +117,7 @@ archive:
 	  VERSION=$(VERSION) ARCH=$(ARCH) SUFFIX=$(SUFFIX) make unix-archive; \
 	fi
 
-unix-archive: show
-	ln -s sbcl `pwd`/sbcl-$(VERSION)-$(ARCH)-$(OS)$(SUFFIX)
-	./sbcl/binary-distribution.sh sbcl-$(VERSION)-$(ARCH)-$(OS)$(SUFFIX)
-	rm -f sbcl-$(VERSION)-$(ARCH)-$(OS)$(SUFFIX)-binary.tar.bz2
-	bzip2 sbcl-$(VERSION)-$(ARCH)-$(OS)$(SUFFIX)-binary.tar
-
-windows-archive: show
-	cd sbcl;bash make-windows-installer.sh
-	echo $(VERSION)-$(ARCH)-windows$(SUFFIX)-binary > sbcl/output/version.txt
-	cd sbcl/output;"$$WIX/bin/light" sbcl.wixobj \
-	  -ext "$$WIX/bin/WixUIExtension.dll" -cultures:en-us \
-	  -out sbcl-`cat version.txt`.msi
-	cd sbcl/output;mv sbcl-`cat version.txt`.msi ../..
-
-latest-version: lasthash version
+latest-version: version lasthash
 	$(eval VERSION := $(shell cat version))
 	$(eval HASH := $(shell cat lasthash))
 	@echo "set version $(VERSION):$(HASH)"
