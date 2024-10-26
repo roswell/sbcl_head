@@ -70,20 +70,42 @@ clean:
 	rm -f verson branch
 	ls |grep sbcl |xargs rm -rf
 	rm -f hash lasthash
+
 show:
 	@echo VERSION=$(VERSION) ARCH=$(ARCH) BRANCH=$(BRANCH) SUFFIX=$(SUFFIX) HASH=$(HASH)
 	cc -x c -v -E /dev/null || true
 	cc -print-search-dirs || true
 
 #sbcl
-compile: show
-	@[ -n "$(VERSION)" ] || (echo version should be set; false)
-	rm -rf sbcl
+sbcl:
 	git clone --depth 100 https://github.com/sbcl/sbcl --branch=master
 	cd sbcl;git checkout `cat ../lasthash`
-	cd sbcl;echo '"$(VERSION)-daily"' > version.lisp-expr
-	cd sbcl;bash make.sh $(SBCL_OPTIONS) --arch=$(ARCH) --xc-host="$(LISP_IMPL)" || true
-	cd sbcl;bash run-sbcl.sh --eval "(progn (print *features*)(terpri)(quit))"
+	@if [ -n "$(SBCL_PATCH)" ]; then\
+		SBCL_PATCH="$(SBCL_PATCH)" $(MAKE) patch-sbcl; \
+	fi
+
+sbcl/version.lisp-expr: sbcl
+	cd sbcl;echo '"$(VERSION)$(VERSION_SUFFIX)$(SUFFIX)"' > version.lisp-expr
+
+compile-1: show sbcl
+	cd sbcl;{ git describe  | sed -n -e 's/^.*-g//p' ; } 2>/dev/null > git_hash
+	cat sbcl/git_hash
+	rm -f sbcl/version.lisp-expr;VERSION=$(VERSION) $(MAKE) sbcl/version.lisp-expr
+	mv sbcl/.git sbcl/_git || true
+compile-config: compile-1
+	cd sbcl;bash make-config.sh $(SBCL_OPTIONS) --arch=$(ARCH) --xc-host="$(LISP_IMPL)"
+compile: compile-1
+	bash -c "cd sbcl;bash make.sh $(SBCL_OPTIONS) --arch=$(ARCH) --xc-host='$(LISP_IMPL)'" \
+	&& $(MAKE) compile-9
+compile-9:
+	cd sbcl;mv _git .git || true
+	cd sbcl;bash make-shared-library.sh || true
+	cd sbcl;bash run-sbcl.sh --eval "(progn (print *features*)(print (lisp-implementation-version))(terpri)(quit))"
+	ldd sbcl/src/runtime/sbcl || \
+	otool -L sbcl/src/runtime/sbcl || \
+	readelf -d sbcl/src/runtime/sbcl || \
+	true
+
 archive:
 	if [ -n "$$WIX" ] ; then \
 	  VERSION=$(VERSION) ARCH=$(ARCH) OS=$(OS) SUFFIX=$(SUFFIX) make windows-archive; \
@@ -104,10 +126,6 @@ windows-archive: show
 	  -ext "$$WIX/bin/WixUIExtension.dll" -cultures:en-us \
 	  -out sbcl-`cat version.txt`.msi
 	cd sbcl/output;mv sbcl-`cat version.txt`.msi ../..
-
-
-upload-archive: show
-	VERSION=$(VERSION) TARGET=$(ARCH) SUFFIX=$(SUFFIX) ros web.ros upload-archive
 
 latest-version: lasthash version
 	$(eval VERSION := $(shell cat version))
