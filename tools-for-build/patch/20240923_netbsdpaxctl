@@ -1,0 +1,19 @@
+diff --git a/src/runtime/Config.arm64-netbsd b/src/runtime/Config.arm64-netbsd
+index 93470e3..f654151 100644
+--- a/src/runtime/Config.arm64-netbsd
++++ b/src/runtime/Config.arm64-netbsd
+@@ -19,3 +19,5 @@ endif
+ 
+ LINKFLAGS += -export-dynamic
+ LDFLAGS += -export-dynamic
++
++SBCL_PAXCTL=/usr/sbin/paxctl +m
+diff --git a/src/runtime/Config.x86-64-netbsd b/src/runtime/Config.x86-64-netbsd
+index eee3e9a..59d4f9d 100644
+--- a/src/runtime/Config.x86-64-netbsd
++++ b/src/runtime/Config.x86-64-netbsd
+@@ -24,3 +24,4 @@ endif
+ LINKFLAGS += -export-dynamic
+ LDFLAGS += -export-dynamic
+ 
++SBCL_PAXCTL=/usr/sbin/paxctl +m
