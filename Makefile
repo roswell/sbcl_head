@@ -10,10 +10,21 @@ ORIGIN_URI=https://github.com/sbcl/sbcl
 ORIGIN_REF=master
 GITHUB=https://github.com/$(GITHUB_REPOSITORY)
 
+BRANCH ?=
+VERSION_SUFFIX ?= .roswell
+ARCH ?=
 SUFFIX ?=
+TARGETS ?=
 SBCL_OPTIONS ?=--fancy
 SBCL_PATCH ?=
 LISP_IMPL ?= ros -L sbcl-bin without-roswell=t --no-rc run
+
+DOCKER_REPO ?= docker.pkg.github.com/roswell/sbcl_bin
+DOCKER_PLATFORM ?= linux/amd64
+DOCKER_BUILD_OPTIONS ?=
+DOCKER_IMAGE_SUFFIX ?=
+IMAGE ?=
+DOCKER_ACTION ?= bash ./tools-for-build/$(IMAGE)/setup;make docker-default-action
 
 ZSTD_BRANCH ?= v1.5.6
 
@@ -109,6 +120,86 @@ compile-9:
 	otool -L sbcl/src/runtime/sbcl || \
 	readelf -d sbcl/src/runtime/sbcl || \
 	true
+#docker
+debug-docker:
+	docker run \
+		--rm \
+		-it \
+		--platform $(DOCKER_PLATFORM) \
+		-v `pwd`:/tmp \
+		$(DOCKER_REPO)/$$(cat ./tools-for-build/$(IMAGE)/Name)$(DOCKER_IMAGE_SUFFIX) \
+		bash
+
+build-docker:
+	DOCKER_PLATFORM=$(DOCKER_PLATFORM) sh ./tools-for-build/$(IMAGE)/pre-build || true
+	docker build --platform $(DOCKER_PLATFORM) -t $(DOCKER_REPO)/$$(cat ./tools-for-build/$(IMAGE)/Name)$(DOCKER_IMAGE_SUFFIX) $(DOCKER_BUILD_OPTIONS) ./tools-for-build/$(IMAGE)
+push-docker:
+	docker push $(DOCKER_REPO)/$$(cat ./tools-for-build/$(IMAGE)/Name)$(DOCKER_IMAGE_SUFFIX);
+pull-docker:
+	docker pull $(DOCKER_REPO)/$$(cat ./tools-for-build/$(IMAGE)/Name)$(DOCKER_IMAGE_SUFFIX);
+docker:
+	docker run \
+		--rm \
+		--platform $(DOCKER_PLATFORM) \
+		-v `pwd`:/tmp \
+		-e ARCH=$(ARCH) \
+		-e VERSION=$(VERSION) \
+		-e SUFFIX=$(SUFFIX) \
+		-e CFLAGS=$(CFLAGS) \
+		-e LINKFLAGS=$(LINKFLAGS) \
+		-e TARGET=$(TARGET) \
+		-e LISP_IMPL="$(LISP_IMPL)" \
+		$(DOCKER_REPO)/$$(cat ./tools-for-build/$(IMAGE)/Name)$(DOCKER_IMAGE_SUFFIX) \
+		bash \
+		-c "cd /tmp;$(DOCKER_ACTION)"
+#OK
+#TARGET=riscv64 DOCKER_PLATFORM=linux/riscv64 DOCKER_IMAGE_SUFFIX=riscv64 IMAGE=glibc2.31          SUFFIX= make cross-docker
+#NG
+#TARGET=armhf   DOCKER_PLATFORM=linux/arm/v6  DOCKER_IMAGE_SUFFIX=armhf   IMAGE=glibc2.13-raspbian SUFFIX=-glibc2.13 LINKFLAGS=-lrt  make cross-docker
+
+cross-docker: cross-docker-1 cross-docker-2 cross-docker-3 cross-docker-4 cross-docker-5
+	OS=linux ARCH=$(TARGET) SUFFIX=$(SUFFIX) make latest-version archive
+
+cross-docker-1:
+	IMAGE=$(IMAGE) \
+	TARGET=$(TARGET) \
+	SUFFIX=$(SUFFIX) \
+	CFLAGS=$(CFLAGS) \
+	LINKFLAGS=$(LINKFLAGS) \
+	DOCKER_PLATFORM=$(DOCKER_PLATFORM) \
+	DOCKER_IMAGE_SUFFIX=$(DOCKER_IMAGE_SUFFIX) \
+	DOCKER_ACTION="bash ./tools-for-build/$(IMAGE)/setup;make latest-version compile-config" \
+	ARCH="" \
+	$(MAKE) latest-version docker
+
+cross-docker-2:
+	cd sbcl;sh make-host-1.sh
+
+cross-docker-3:
+	IMAGE=$(IMAGE) \
+	TARGET=$(TARGET) \
+	SUFFIX=$(SUFFIX) \
+	CFLAGS=$(CFLAGS) \
+	LINKFLAGS=$(LINKFLAGS) \
+	DOCKER_PLATFORM=$(DOCKER_PLATFORM) \
+	DOCKER_IMAGE_SUFFIX=$(DOCKER_IMAGE_SUFFIX) \
+	DOCKER_ACTION="bash ./tools-for-build/$(IMAGE)/setup;cd sbcl;sh make-target-1.sh" \
+	$(MAKE) latest-version docker
+
+cross-docker-4:
+	cd sbcl;sh make-host-2.sh
+
+cross-docker-5:
+	IMAGE=$(IMAGE) \
+	SUFFIX=$(SUFFIX) \
+	CFLAGS=$(CFLAGS) \
+	LINKFLAGS=$(LINKFLAGS) \
+	DOCKER_PLATFORM=$(DOCKER_PLATFORM) \
+	DOCKER_IMAGE_SUFFIX=$(DOCKER_IMAGE_SUFFIX) \
+	DOCKER_ACTION="bash ./tools-for-build/$(IMAGE)/setup;cd sbcl;sh make-target-2.sh && sh make-target-contrib.sh;cd ..;make latest-version compile-9" \
+	$(MAKE) latest-version docker
+
+docker-default-action: compile archive
 
 latest-version: version lasthash
 	$(eval VERSION := $(shell cat version))
