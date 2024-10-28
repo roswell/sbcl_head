@@ -15,8 +15,6 @@ jobs:
       SUFFIX: ${{ matrix.suffix }}
       LINKFLAGS: ${{ matrix.linkflags }}
       ROSWELL_BRANCH: master
-      GH_USER: ${{ github.repository_owner }}
-      GH_REPO: sbcl_bin
       GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     strategy:
