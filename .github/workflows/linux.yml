@@ -41,8 +41,9 @@ jobs:
           - {target: arm64  ,docker-platform: linux/arm64  ,docker-image-suffix: 'aarch64',cross: yes}
           - {target: ppc64le,docker-platform: linux/ppc64le,docker-image-suffix: 'ppc64le',cross: yes}
           #-{target: riscv64,docker-platform: linux/riscv64,docker-image-suffix: 'riscv64'}
-          # with suffix glibc2.10 require treat.
+          # with suffix glibc2.10 require some treat.
           - {suffix: '-glibc2.10',linkflags: '-lrt' }
+          - {suffix: '-glibc2.10',target: x86-64,image: glibc2.10-64 }
           # musl suffix
           - {suffix: '-musl'     ,target: x86,docker-platform: linux/386,docker-build-options: '--build-arg WRAPPER=linux32',docker-image-suffix: 'x86' }
           - {suffix: '-musl1.2.4',target: x86,docker-platform: linux/386,docker-build-options: '--build-arg WRAPPER=linux32',docker-image-suffix: 'x86' }
