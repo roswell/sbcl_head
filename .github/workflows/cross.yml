@@ -1,0 +1,138 @@
+name: LinuxCrossBuild
+
+on:
+  schedule:
+    - cron:  '0 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ secrets.VERSION }}
+      ARCH: ${{ matrix.target }}
+      SUFFIX: ${{ matrix.suffix }}
+      LINKFLAGS: ${{ matrix.linkflags }}
+      ROSWELL_BRANCH: master
+      GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SBCL_PATCH: ${{ matrix.sbclpatch }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {suffix: '',          target: armel,docker-platform: linux/arm/v6,docker-image-suffix: armel,image: glibc2.19-debian,  lisp: 'sbcl-bin/2.4.0'}
+          - {suffix: '-glibc2.19',target: armel,docker-platform: linux/arm/v6,docker-image-suffix: armel,image: glibc2.19-debian,  lisp: 'sbcl-bin/2.4.0'}
+          - {suffix: ''          ,target: armv7,docker-platform: linux/arm/v7,docker-image-suffix: armv7,image: glibc2.19-debian,  lisp: 'sbcl-bin/2.4.0'}
+          - {suffix: '-glibc2.19',target: armv7,docker-platform: linux/arm/v7,docker-image-suffix: armv7,image: glibc2.19-debian,  lisp: 'sbcl-bin/2.4.0'}
+          #- {suffix: '-glibc2.13',target: armhf,docker-platform: linux/arm/v6,docker-image-suffix: armhf,image: glibc2.13-raspbian,lisp: 'sbcl-bin/2.4.0', linkflags: '-lrt'}
+    environment: SET_VERSION
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          image: tonistiigi/binfmt:qemu-v8.1.5
+      - name: setenv
+        run: |
+          echo "$HOME/.roswell/bin" >> $GITHUB_PATH
+          echo "ROSWELL_BRANCH=release" >> $GITHUB_ENV
+      - name: checkenv
+        run: |
+          uname -s
+          uname -m
+          echo $ROSWELL_INSTALL_DIR
+          echo $ROSWELL_BRANCH
+      - name: Install Roswell
+        env:
+          LISP: ${{ matrix.lisp }}
+        run: |
+          curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
+          ros install snmsts/sn.github roswell/sbcl_bin
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: docker.pkg.github.com
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: check uploaded
+        id: check_uploaded
+        env:
+          VERSION: ${{ secrets.VERSION }}
+          ARCH: ${{ matrix.target }}
+          IMAGE: ${{ matrix.image }}
+          SUFFIX: ${{ matrix.suffix }}
+        run: make latest-version upload-archive-p
+        continue-on-error: true
+      - name: pull or build&push docker image
+        if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
+        env:
+          DOCKER_PLATFORM: ${{ matrix.docker-platform }}
+          DOCKER_BUILD_OPTIONS: ${{ matrix.docker-build-options }}
+          DOCKER_IMAGE_SUFFIX: ${{ matrix.docker-image-suffix }}
+          IMAGE: ${{ matrix.image }}
+        run: |
+          if [ -n "$IMAGE" ]; then
+             make pull-docker || make build-docker push-docker
+          fi
+      - name: config
+        if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
+        env:
+          VERSION: ${{ secrets.VERSION }}
+          IMAGE: ${{ matrix.image }}
+          SUFFIX: ${{ matrix.suffix }}
+          LINKFLAGS: ${{ matrix.linkflags }}
+          DOCKER_PLATFORM: ${{ matrix.docker-platform }}
+          DOCKER_IMAGE_SUFFIX: ${{ matrix.docker-image-suffix }}
+          DOCKER_ACTION: bash ./tools-for-build/${{ matrix.image }}/setup;make latest-version compile-config
+        run: |
+          make latest-version sbcl zstd
+          ARCH=""  make latest-version docker
+      - name: make-host-1
+        if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
+        run: |
+          sudo bash -c "cd sbcl;sh make-host-1.sh"
+      - name: build-runtime
+        if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
+        env:
+          VERSION: ${{ secrets.VERSION }}
+          IMAGE: ${{ matrix.image }}
+          SUFFIX: ${{ matrix.suffix }}
+          LINKFLAGS: ${{ matrix.linkflags }}
+          DOCKER_PLATFORM: ${{ matrix.docker-platform }}
+          DOCKER_IMAGE_SUFFIX: ${{ matrix.docker-image-suffix }}
+          DOCKER_ACTION: bash ./tools-for-build/${{ matrix.image }}/setup;cd sbcl;sh make-target-1.sh
+        run: |
+          make latest-version docker
+      - name: make-host2
+        if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
+        run: |
+          sudo bash -c "cd sbcl;sh make-host-2.sh"
+      - name: build-target2 and contrib
+        if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
+        env:
+          VERSION: ${{ secrets.VERSION }}
+          IMAGE: ${{ matrix.image }}
+          SUFFIX: ${{ matrix.suffix }}
+          LINKFLAGS: ${{ matrix.linkflags }}
+          DOCKER_PLATFORM: ${{ matrix.docker-platform }}
+          DOCKER_IMAGE_SUFFIX: ${{ matrix.docker-image-suffix }}
+          DOCKER_ACTION: bash ./tools-for-build/${{ matrix.image }}/setup;cd sbcl;sh make-target-2.sh && sh make-target-contrib.sh;cd ..;make compile-9
+        run: |
+          make latest-version docker
+      - name: upload
+        if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
+        env:
+          GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ secrets.VERSION }}
+          ARCH: ${{ matrix.target }}
+          IMAGE: ${{ matrix.image }}
+          SUFFIX: ${{ matrix.suffix }}
+          LINKFLAGS: ${{ matrix.linkflags }}
+          DOCKER_PLATFORM: ${{ matrix.docker-platform }}
+          DOCKER_IMAGE_SUFFIX: ${{ matrix.docker-image-suffix }}
+        run: |
+          make latest-version archive
+          ls
+          ls *.bz2 |xargs -i env FILE={} make latest-version upload-archive
