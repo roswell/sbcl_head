@@ -213,11 +213,5 @@ latest-version: version branch lasthash
 	$(eval HASH := $(shell cat lasthash))
 	@echo "set version $(VERSION):$(HASH):$(BRANCH)"
 
-precompile-freebsd:
-	mv /usr/local/lib/libzstd.so* /tmp
-
-postcompile-freebsd:
-	mv /tmp/libzstd.so* /usr/local/lib
-
 patch-sbcl:
 	cd sbcl;git apply ../tools-for-build/patch/$(SBCL_PATCH);git diff
