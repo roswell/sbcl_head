@@ -1,0 +1,100 @@
+name: Solaris
+
+on:
+  schedule:
+    - cron:  '10 0 * * *'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      UNAME: ${{ matrix.os }}
+      VERSION: ${{ secrets.VERSION }}
+      ARCH: ${{ matrix.target }}
+      SUFFIX: ${{ matrix.suffix }}
+      LINKFLAGS: ${{ matrix.linkflags }}
+      ROSWELL_BRANCH: master
+      SBCL_OPTIONS: ${{ matrix.sbcloptions }}
+      GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SBCL_PATCH: ${{ matrix.sbclpatch }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        sbclpatch: [""]
+        os: ['omnios', 'solaris']
+        suffix: ['']
+        target: ['x86-64', 'x86']
+        include:
+          # default lisp used is sbcl-bin/2.4.8
+          - lisp: 'sbcl-bin/2.4.8'
+          - {suffix: '',sbcloptions: '--fancy'}
+    environment: SET_VERSION
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: setenv
+        run: |
+          echo "$HOME/.roswell/bin" >> $GITHUB_PATH
+          echo "ROSWELL_BRANCH=release" >> $GITHUB_ENV
+      - name: Install Roswell
+        env:
+          LISP: ${{ matrix.lisp }}
+        run: |
+          curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
+          ros install snmsts/sn.github
+          make latest-version zstd sbcl
+          sed -i "s/-lzstd/-Wl,-Bstatic -lzstd -Wl,-Bdynamic/g" sbcl/src/runtime/Config.x86*-sunos
+      - name: check uploaded
+        id: check_uploaded
+        env:
+          VERSION: ${{ secrets.VERSION }}
+          ARCH: ${{ matrix.target }}
+          SUFFIX: ${{ matrix.suffix }}
+        run: make latest-version upload-archive-p
+        continue-on-error: true
+      - name: Build on omnios
+        if: ${{ matrix.os == 'omnios' && ( steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' ) }}
+        uses: vmactions/omnios-vm@v1
+        with:
+          envs: 'SBCL_OPTIONS ARCH'
+          usesh: true
+          prepare: |
+            env
+            pkg install build-essential git
+          run: |
+            sudo bash -c 'cd zstd/lib;gmake PREFIX=/usr CFLAGS="-fPIC -m32" libzstd.a-release;cp libzstd.a /usr/lib;cp *.h /usr/include'
+            sudo bash -c 'cd zstd/lib;gmake PREFIX=/usr LIBDIR=/usr/lib/amd64 CFLAGS="-fPIC" clean libzstd.a-release;cp libzstd.a /usr/lib/amd64'
+            git clone https://github.com/roswell/roswell && bash -c "cd roswell;./bootstrap;./configure --prefix=/usr;gmake;sudo gmake install"
+            ros install sbcl-bin/2.3.0
+            ros run -- --version
+            gmake latest-version compile archive
+      - name: Build on solaris
+        if: ${{ matrix.os == 'solaris' && ( steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' ) }}
+        uses: vmactions/solaris-vm@v1
+        with:
+          release: "11.4-gcc"
+          envs: 'SBCL_OPTIONS ARCH'
+          usesh: true
+          prepare: |
+            pkg publisher solaris
+            beadm list
+            pkg info entire
+            pkg list -af entire
+            pkg list -af gcc-7
+            pkg list -af gcc-11
+            pkg install -v --accept developer/gcc-7@7.3.0-11.4.0.0.1.14.0
+            pkgutil -y -i automake autoconf autoconf_archive libtool pkgconfig libcppunit1_12_1 libcppunit_dev gsed ggrep
+          run: |
+            sudo bash -c 'cd zstd/lib;gmake CC=gcc PREFIX=/usr CFLAGS="-fPIC -m32" libzstd.a-release;cp libzstd.a /usr/lib;cp *.h /usr/include'
+            sudo bash -c 'cd zstd/lib;gmake CC=gcc PREFIX=/usr LIBDIR=/usr/lib/amd64 CFLAGS="-fPIC" clean libzstd.a-release;cp libzstd.a /usr/lib/amd64'
+            git clone https://github.com/roswell/roswell && bash -c "cd roswell;./bootstrap;./configure --prefix=/usr;gmake;sudo gmake install"
+            ros install sbcl-bin/2.3.0
+            ros run -- --version
+            gmake latest-version compile archive
+      - name: upload
+        if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
+        run: |
+          FILE=`ls *.bz2` make latest-version upload-archive
