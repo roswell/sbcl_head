@@ -1,0 +1,65 @@
+diff --git a/contrib/sb-grovel/def-to-lisp.lisp b/contrib/sb-grovel/def-to-lisp.lisp
+index 878a4bd0e..9b2de54a6 100644
+--- a/contrib/sb-grovel/def-to-lisp.lisp
++++ b/contrib/sb-grovel/def-to-lisp.lisp
+@@ -197,7 +197,7 @@ code:
+        (split-cflags (sb-ext:posix-getenv "EXTRA_CFLAGS"))
+        #+(and linux largefile)
+        '("-D_LARGEFILE_SOURCE" "-D_LARGEFILE64_SOURCE" "-D_FILE_OFFSET_BITS=64")
+-       #+(and (or x86 ppc sparc) (or linux freebsd)) '("-m32")
++       #+(and (or x86 ppc sparc) (or linux freebsd sunos)) '("-m32")
+        #+(and x86-64 darwin inode64)
+        `("-arch" "x86_64" ,(format nil "-mmacosx-version-min=~A"
+                                    (or (sb-ext:posix-getenv "SBCL_MACOSX_VERSION_MIN")
+diff --git a/src/compiler/generic/genesis.lisp b/src/compiler/generic/genesis.lisp
+index b019949fd..04534f629 100644
+--- a/src/compiler/generic/genesis.lisp
++++ b/src/compiler/generic/genesis.lisp
+@@ -44,7 +44,7 @@
+ (defun lispobj-dot-h ()
+   (if (boundp 'cl-user::*lispobj-h-namestring*)
+       (symbol-value 'cl-user::*lispobj-h-namestring*)
+-      "lispobj.h"))
++      "../lispobj.h"))
+ 
+ (eval-when (:compile-toplevel :load-toplevel :execute)
+   (use-package "SB-COREFILE"))
+diff --git a/src/runtime/Config.x86-64-sunos b/src/runtime/Config.x86-64-sunos
+index 091a2f3de..762f3e9aa 100644
+--- a/src/runtime/Config.x86-64-sunos
++++ b/src/runtime/Config.x86-64-sunos
+@@ -1,5 +1,5 @@
+ CC=gcc
+-CFLAGS += -m64 -g -Wall -std=gnu89 -D__EXTENSIONS__ -DSVR4 -D_REENTRANT -fno-omit-frame-pointer -D_POSIX_PTHREAD_SEMANTICS
++CFLAGS += -m64 -g -Wall -D__EXTENSIONS__ -DSVR4 -D_REENTRANT -fno-omit-frame-pointer -D_POSIX_PTHREAD_SEMANTICS
+ LINKFLAGS = -m64 -g
+ ASFLAGS = -m64 -Wall
+ GREP = ggrep
+diff --git a/src/runtime/GNUmakefile b/src/runtime/GNUmakefile
+index 15e12a995..699868a53 100644
+--- a/src/runtime/GNUmakefile
++++ b/src/runtime/GNUmakefile
+@@ -35,7 +35,10 @@ include ../../output/prefix.def
+ 
+ CFLAGS += -g -Wall -Wundef -Wsign-compare -Wpointer-arith -O3
+ ASFLAGS += $(CFLAGS)
++
++ifndef LISP_FEATURE_SUNOS
+ CPPFLAGS += -I.
++endif
+ 
+ # Give make access to the target Lisp features.
+ include genesis/Makefile.features
+diff --git a/tlsf-bsd/tlsf/tlsf.c b/tlsf-bsd/tlsf/tlsf.c
+index ce628fd3e..65d884674 100644
+--- a/tlsf-bsd/tlsf/tlsf.c
++++ b/tlsf-bsd/tlsf/tlsf.c
+@@ -31,7 +31,7 @@
+ #define tlsf_assert(expr) (void)(0)
+ #endif
+ 
+-#include "genesis/sbcl.h"
++#include "../../src/runtime/genesis/sbcl.h"
+ 
+ /* Public constants: may be modified. */
+ enum tlsf_public {
