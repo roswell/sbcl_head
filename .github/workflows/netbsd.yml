@@ -121,7 +121,6 @@ jobs:
             sudo touch /usr/bin/ros
             sudo chmod 755 /usr/bin/ros
             sudo pkgin -y install gmake
-            /usr/sbin/paxctl +m sbcl/src/runtime/sbcl || true
             bash -c "cd sbcl;sh make-target-2.sh && sh make-target-contrib.sh"
             gmake compile-9
       - name: upload
