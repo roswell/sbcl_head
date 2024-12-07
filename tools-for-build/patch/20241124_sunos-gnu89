@@ -35,21 +35,6 @@ index 091a2f3de..762f3e9aa 100644
  LINKFLAGS = -m64 -g
  ASFLAGS = -m64 -Wall
  GREP = ggrep
-diff --git a/src/runtime/GNUmakefile b/src/runtime/GNUmakefile
-index 15e12a995..699868a53 100644
---- a/src/runtime/GNUmakefile
-+++ b/src/runtime/GNUmakefile
-@@ -35,7 +35,10 @@ include ../../output/prefix.def
- 
- CFLAGS += -g -Wall -Wundef -Wsign-compare -Wpointer-arith -O3
- ASFLAGS += $(CFLAGS)
-+
-+ifndef LISP_FEATURE_SUNOS
- CPPFLAGS += -I.
-+endif
- 
- # Give make access to the target Lisp features.
- include genesis/Makefile.features
 diff --git a/tlsf-bsd/tlsf/tlsf.c b/tlsf-bsd/tlsf/tlsf.c
 index ce628fd3e..65d884674 100644
 --- a/tlsf-bsd/tlsf/tlsf.c
