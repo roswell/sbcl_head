@@ -213,6 +213,7 @@ latest-version: version branch lasthash
 
 patch-sbcl:
 	cd sbcl;ls `pwd`/../tools-for-build/patch/* | perl -lne 'system "git", "apply", $$_;'
+	git diff
 
 diff:
 	cd ..;diff -ur --exclude=.git --exclude=.env --exclude=table.md --exclude=web.ros --exclude=sbcl --exclude=version --exclude=README.md sbcl_bin sbcl_head
