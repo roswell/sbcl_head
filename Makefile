@@ -217,4 +217,4 @@ patch-sbcl:
 	cd sbcl;git apply ../tools-for-build/patch/$(SBCL_PATCH);git diff
 
 diff:
-	cd ..;diff -ur --exclude=.git --exclude=.env --exclude=table.md --exclude=web.ros --exclude=sbcl --exclude=version sbcl_bin sbcl_head
+	cd ..;diff -ur --exclude=.git --exclude=.env --exclude=table.md --exclude=web.ros --exclude=sbcl --exclude=version --exclude=README.md sbcl_bin sbcl_head

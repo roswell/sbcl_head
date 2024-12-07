@@ -87,7 +87,7 @@ jobs:
           DOCKER_IMAGE_SUFFIX: ${{ matrix.docker-image-suffix }}
           DOCKER_ACTION: bash ./tools-for-build/${{ matrix.image }}/setup;make latest-version compile-config
         run: |
-          make latest-version sbcl zstd
+          make latest-version zstd sbcl
           ARCH=""  make latest-version docker
       - name: make-host-1
         if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}

@@ -133,7 +133,7 @@ jobs:
           DOCKER_ACTION: bash ./tools-for-build/${{ matrix.image }}/setup;make latest-version compile-config
           SBCL_PATCH: ${{ matrix.sbclpatch }}
         run: |
-          make latest-version sbcl zstd
+          make latest-version zstd sbcl
           ARCH=""  make latest-version docker
       - name: make-host-1
         if: ${{ matrix.cross == 'yes' && ( steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' ) }}

@@ -1,4 +1,4 @@
-name: Windows64
+name: Windows32
 
 on:
   schedule:
@@ -6,24 +6,24 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-win64:
+  build-win32:
     runs-on: windows-latest
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
-        arch: [x86_64]
+        arch: [i686]
         include:
-        - arch: x86_64
-          arch2: amd64
+        - arch: i686
+          arch2: i686
           bit: 64
-          target: x86-64
+          target: x86
     env:
       LISP: sbcl-bin
       RESULT_NAME: windows-${{ matrix.arch2 }}
       RESULT_PATH: windows-${{ matrix.arch2 }}
       RESULT_PATH_SUB: roswell
-      SBCL_OPTIONS: --fancy
+      SBCL_OPTIONS:
       ARCH: ${{ matrix.target }}
       VERSION: ${{ secrets.VERSION }}
       GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -56,15 +56,10 @@ jobs:
     - name: build sbcl
       shell: msys2 {0}
       run: |
-        make zstd
-        find /mingw64 | grep zstd
-        rm /mingw64/lib/libzstd.dll.a
-        mv /mingw64/bin/libzstd.dll /mingw64/bin/libzstd.dll_
-        bash -c 'cd zstd/lib;make CFLAGS="-fPIC" libzstd.a-release;cp libzstd.a /mingw64/lib;cp *.h /mingw64/include'
         if [ "$VERSION" = "" ]; then
-          OS=windows make latest-version compile archive;
+          PATH=/mingw32/bin:$PATH make latest-version compile archive;
         else
-          OS=windows make compile archive;
+          PATH=/mingw32/bin:$PATH make compile archive;
         fi
     - name: upload
       shell: msys2 {0}
@@ -75,4 +70,3 @@ jobs:
         else
           make upload-archive;
         fi
-
