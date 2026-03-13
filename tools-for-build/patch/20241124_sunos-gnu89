@@ -2,10 +2,11 @@ diff --git a/contrib/sb-grovel/def-to-lisp.lisp b/contrib/sb-grovel/def-to-lisp.
 index 878a4bd0e..9b2de54a6 100644
 --- a/contrib/sb-grovel/def-to-lisp.lisp
 +++ b/contrib/sb-grovel/def-to-lisp.lisp
-@@ -197,7 +197,7 @@ code:
-        (split-cflags (sb-ext:posix-getenv "EXTRA_CFLAGS"))
+@@ -199,7 +199,7 @@ code:
         #+(and linux largefile)
         '("-D_LARGEFILE_SOURCE" "-D_LARGEFILE64_SOURCE" "-D_FILE_OFFSET_BITS=64")
+        #+64-bit-time
+        '("-D_TIME_BITS=64")
 -       #+(and (or x86 ppc sparc) (or linux freebsd)) '("-m32")
 +       #+(and (or x86 ppc sparc) (or linux freebsd sunos)) '("-m32")
         #+(and x86-64 darwin inode64)
