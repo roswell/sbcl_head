@@ -1,6 +1,12 @@
 FROM ubuntu:14.04
 RUN apt-get update && apt-get install -y \
-    build-essential git automake libcurl4-openssl-dev curl \
+    build-essential git automake libcurl4-openssl-dev curl software-properties-common \
+ && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
+ && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1E9377A2BA9EF27F \
+ && apt-get update && apt-get install -y gcc-5 g++-5 \
+ && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 \
+    --slave /usr/bin/g++ g++ /usr/bin/g++-5 \
+ && update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-5 60 \
  && (apt-get install -y gcc-multilib || true ) \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
