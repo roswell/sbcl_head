@@ -1,0 +1,13 @@
+diff --git a/src/code/arm64-vm.lisp b/src/code/arm64-vm.lisp
+index 06fee2e..c4ac9e5 100644
+--- a/src/code/arm64-vm.lisp
++++ b/src/code/arm64-vm.lisp
+@@ -28,7 +28,7 @@
+   (value (unsigned 32)))
+
+ (defun context-float-register (context index format &optional integer)
+-  #+openbsd (declare (ignore context index))
++  #+openbsd (declare (ignore context index integer))
+   #-openbsd
+   (let ((sap (alien-sap (context-float-register-addr context index))))
+     (ecase format
