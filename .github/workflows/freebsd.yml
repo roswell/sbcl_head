@@ -122,7 +122,7 @@ jobs:
           envs: 'VERSION ARCH IMAGE SUFFIX LINKFLAGS GH_USER GH_REPO GITHUB_OAUTH_TOKEN'
           usesh: true
           prepare: |
-            pkg install -y bash roswell autoconf texinfo perl5 gmake gcc libffi git
+            pkg install -y bash roswell autoconf texinfo perl5 gmake gcc libffi git ca_root_nss
             pkg install -y compat14x-amd64 || true
             ros install ${{ matrix.lisp }}
             ros install snmsts/sn.github roswell/sbcl_bin
