@@ -85,7 +85,7 @@ jobs:
             pkg list -af entire
             pkg list -af gcc-7
             pkg list -af gcc-11
-            pkg install -v --accept developer/gcc-7@7.3.0-11.4.0.0.1.14.0
+            pkg install -v --accept developer/gcc-7
             pkgutil -y -i automake autoconf autoconf_archive libtool pkgconfig libcppunit1_12_1 libcppunit_dev gsed ggrep
           run: |
             sudo bash -c 'cd zstd/lib;gmake CC=gcc PREFIX=/usr CFLAGS="-fPIC -m32" libzstd.a-release;cp libzstd.a /usr/lib;cp *.h /usr/include'

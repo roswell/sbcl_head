@@ -1,0 +1,13 @@
+diff --git a/src/runtime/Config.x86-sunos b/src/runtime/Config.x86-sunos
+index 1234abcde..abcde1234 100644
+--- a/src/runtime/Config.x86-sunos
++++ b/src/runtime/Config.x86-sunos
+@@ -11,7 +11,7 @@
+ # files for more information.
+
+ CC=gcc
+-CFLAGS += -g -O2 -Wall -D__EXTENSIONS__ -DSVR4 -D_REENTRANT -fno-omit-frame-pointer -D_POSIX_PTHREAD_SEMANTICS -m32
++CFLAGS += -g -O2 -Wall -D__EXTENSIONS__ -DSVR4 -D_REENTRANT -fno-omit-frame-pointer -D_POSIX_PTHREAD_SEMANTICS -m32 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
+ LINKFLAGS += -m32
+ GREP = ggrep
+
