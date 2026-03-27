@@ -113,6 +113,14 @@ jobs:
         if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
         run: |
           bash -c "cd sbcl;sh make-host-2.sh"
+      - name: upload perfecthash
+        if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: perfecthash-${{ matrix.target }}${{ matrix.suffix }}-${{ matrix.release }}
+          path: |
+            sbcl/xperfecthash*.lisp-expr
+          if-no-files-found: ignore
       - name: build-target2 and contrib on ${{ matrix.os }}
         if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
         uses: cross-platform-actions/action@v0.29.0
