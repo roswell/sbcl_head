@@ -1,0 +1,52 @@
+diff --git a/contrib/sb-posix/constants.lisp b/contrib/sb-posix/constants.lisp
+index 0c3be83..2a17f91 100644
+--- a/contrib/sb-posix/constants.lisp
++++ b/contrib/sb-posix/constants.lisp
+@@ -438,7 +438,8 @@
+  ;; utime(), utimes()
+  #-win32
+  (:type suseconds-t ; OAOOM warning: similar kludge in tools-for-build
+-        #+(and os-provides-suseconds-t 64-bit-time) "__suseconds64_t"
++        #+(and os-provides-suseconds-t 64-bit-time os-provides-suseconds64-t) "__suseconds64_t"
++        #+(and os-provides-suseconds-t 64-bit-time (not os-provides-suseconds64-t)) "suseconds_t"
+         #+(and os-provides-suseconds-t (not 64-bit-time)) "suseconds_t"
+         #-os-provides-suseconds-t "long")
+ 
+@@ -451,8 +452,8 @@
+  (:structure alien-timeval
+              ("struct timeval"
+               (time-t sec "time_t" "tv_sec")
+-              (suseconds-t usec #+64-bit-time "__suseconds64_t"
+-                                #-64-bit-time "suseconds_t"
++              (suseconds-t usec #+(and 64-bit-time os-provides-suseconds64-t) "__suseconds64_t"
++                                #-(and 64-bit-time os-provides-suseconds64-t) "suseconds_t"
+                                 "tv_usec")))
+ 
+  (:integer veof "VEOF" nil t)
+diff --git a/tools-for-build/grovel-features.sh b/tools-for-build/grovel-features.sh
+index 2df870b..905ecb0 100644
+--- a/tools-for-build/grovel-features.sh
++++ b/tools-for-build/grovel-features.sh
+@@ -45,6 +45,8 @@ featurep os-provides-blksize-t
+ 
+ featurep os-provides-suseconds-t
+ 
++featurep os-provides-suseconds64-t
++
+ featurep os-provides-getprotoby-r
+ 
+ featurep os-provides-poll
+diff --git a/tools-for-build/os-provides-suseconds64-t-test.c b/tools-for-build/os-provides-suseconds64-t-test.c
+new file mode 100644
+index 0000000..4941c00
+--- /dev/null
++++ b/tools-for-build/os-provides-suseconds64-t-test.c
+@@ -0,0 +1,8 @@
++#include <sys/types.h>
++
++int main ()
++{
++    __suseconds64_t s = 0;
++    s = s + s;
++    return 104;
++}
