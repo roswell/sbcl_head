@@ -90,6 +90,10 @@ jobs:
         if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
         run: |
           bash -c "cd sbcl;sh make-host-1.sh"
+      - name: build perfecthash
+        if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
+        run: |
+          make -C sbcl/tools-for-build perfecthash || true
       - name: build-runtime on ${{ matrix.os }}
         if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
         uses: cross-platform-actions/action@v0.29.0
