@@ -1,12 +1,13 @@
 diff --git a/src/runtime/Config.arm-linux b/src/runtime/Config.arm-linux
-index 48e67be37..1234abcde 100644
+index ec1b03d..9c68c7a 100644
 --- a/src/runtime/Config.arm-linux
 +++ b/src/runtime/Config.arm-linux
-@@ -11,7 +11,7 @@
+@@ -9,7 +9,7 @@
+ # provided with absolutely no warranty. See the COPYING and CREDITS
  # files for more information.
-
+ 
 -CFLAGS += -marm
 +CFLAGS += -marm -std=gnu99
-
+ 
  ASSEM_SRC = arm-assem.S
  ARCH_SRC = arm-arch.c
