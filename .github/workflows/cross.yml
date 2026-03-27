@@ -93,6 +93,10 @@ jobs:
         if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
         run: |
           sudo bash -c "cd sbcl;sh make-host-1.sh"
+      - name: build perfecthash
+        if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
+        run: |
+          make -C sbcl/tools-for-build perfecthash || true
       - name: build-runtime
         if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
         env:
