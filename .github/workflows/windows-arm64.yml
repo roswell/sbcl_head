@@ -1,0 +1,69 @@
+name: WindowsArm64
+
+on:
+  schedule:
+    - cron:  '0 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-11-arm
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - arch: clang-aarch64
+          sys: clangarm64
+          target: arm64
+    env:
+      LISP: sbcl-bin
+      SBCL_OPTIONS: --fancy
+      ARCH: ${{ matrix.target }}
+      VERSION: ${{ secrets.VERSION }}
+      GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    environment: SET_VERSION
+
+    steps:
+    - run: git config --global core.autocrlf false
+    - uses: actions/checkout@v4
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.sys }}
+        path-type: inherit
+        release: true
+        update: true
+        install: 'mingw-w64-${{ matrix.arch }}-clang mingw-w64-${{ matrix.arch }}-toolchain make diffutils curl unzip'
+    - name: Run MSYS2 once
+      shell: msys2 {0}
+      run: |
+        pwd
+        echo $MSYSTEM
+        echo $MSYS2_PATH_TYPE
+        echo $PATH
+    - name: install roswell
+      shell: msys2 {0}
+      run: |
+        cc -v
+        curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
+        ros install snmsts/sn.github roswell/sbcl_bin
+    - name: build sbcl
+      shell: msys2 {0}
+      run: |
+        make zstd
+        bash -c 'cd zstd/lib;make CFLAGS="-fPIC" libzstd.a-release;cp libzstd.a /clangarm64/lib;cp *.h /clangarm64/include'
+        if [ "$VERSION" = "" ]; then
+          OS=windows make latest-version compile archive;
+        else
+          OS=windows make compile archive;
+        fi
+    - name: upload
+      shell: msys2 {0}
+      run: |
+        ls
+        if [ "$VERSION" = "" ]; then
+          make latest-version upload-archive;
+        else
+          make upload-archive;
+        fi
