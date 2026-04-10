@@ -17,7 +17,7 @@ jobs:
       LINKFLAGS: ${{ matrix.linkflags }}
       ROSWELL_BRANCH: master
       SBCL_PATCH: ${{ matrix.sbclpatch }}
-      SBCL_OPTIONS: ${{ matrix.sbcloptions }}
+      SBCL_OPTIONS: ${{ matrix.sbcloptions || '--fancy' }}
       GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     strategy:
@@ -68,7 +68,7 @@ jobs:
         if: ${{ matrix.target != 'x86' && ( steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' ) }}
         uses: cross-platform-actions/action@v0.32.0
         with:
-          environment_variables: VERSION ARCH IMAGE SUFFIX LINKFLAGS GH_USER GH_REPO GITHUB_OAUTH_TOKEN
+          environment_variables: VERSION ARCH IMAGE SUFFIX LINKFLAGS GH_USER GH_REPO GITHUB_OAUTH_TOKEN SBCL_OPTIONS
           operating_system: ${{ matrix.os }}
           architecture: ${{ matrix.target == 'x86' && 'x86-64' || matrix.target }}
           version: ${{ matrix.release }}
@@ -89,7 +89,7 @@ jobs:
         if: ${{ matrix.target != 'x86' && ( steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' ) }}
         uses: cross-platform-actions/action@v0.32.0
         with:
-          environment_variables: VERSION ARCH IMAGE SUFFIX LINKFLAGS GH_USER GH_REPO GITHUB_OAUTH_TOKEN
+          environment_variables: VERSION ARCH IMAGE SUFFIX LINKFLAGS GH_USER GH_REPO GITHUB_OAUTH_TOKEN SBCL_OPTIONS
           operating_system: ${{ matrix.os }}
           architecture: ${{ matrix.target == 'x86' && 'x86-64' || matrix.target }}
           version: ${{ matrix.release }}
@@ -105,7 +105,7 @@ jobs:
         if: ${{ matrix.target != 'x86' && ( steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' ) }}
         uses: cross-platform-actions/action@v0.32.0
         with:
-          environment_variables: VERSION ARCH IMAGE SUFFIX LINKFLAGS GH_USER GH_REPO GITHUB_OAUTH_TOKEN
+          environment_variables: VERSION ARCH IMAGE SUFFIX LINKFLAGS GH_USER GH_REPO GITHUB_OAUTH_TOKEN SBCL_OPTIONS
           operating_system: ${{ matrix.os }}
           architecture: ${{ matrix.target }}
           version: ${{ matrix.release }}
@@ -119,7 +119,7 @@ jobs:
         uses: vmactions/freebsd-vm@v1
         with:
           release: ${{ matrix.release }}
-          envs: 'VERSION ARCH IMAGE SUFFIX LINKFLAGS GH_USER GH_REPO GITHUB_OAUTH_TOKEN'
+          envs: 'VERSION ARCH IMAGE SUFFIX LINKFLAGS GH_USER GH_REPO GITHUB_OAUTH_TOKEN SBCL_OPTIONS'
           usesh: true
           prepare: |
             pkg install -y bash roswell autoconf texinfo perl5 gmake gcc libffi git ca_root_nss
