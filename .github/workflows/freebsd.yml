@@ -83,8 +83,13 @@ jobs:
             if [ "$ARCH" = "x86" ]; then
               sudo pkg install -y compat14x-amd64 || true
               VER=$(freebsd-version | sed 's/-p[0-9]*$//')
-              fetch https://download.freebsd.org/releases/amd64/amd64/${VER}/lib32.txz || \
-              fetch https://ftp.freebsd.org/pub/FreeBSD/releases/amd64/amd64/${VER}/lib32.txz
+              for base in \
+                "https://download.freebsd.org/releases/amd64/amd64" \
+                "https://ftp.freebsd.org/pub/FreeBSD/releases/amd64/amd64" \
+                "https://archive.freebsd.org/old-releases/amd64/amd64"; do
+                fetch -s ${base}/${VER}/lib32.txz > /dev/null 2>&1 && \
+                  fetch ${base}/${VER}/lib32.txz && break
+              done
               sudo tar -C / -xpf lib32.txz
               sudo ldconfig -32 /usr/lib32/
             fi
