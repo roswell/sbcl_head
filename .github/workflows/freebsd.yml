@@ -80,7 +80,13 @@ jobs:
             pwd
             sudo env IGNORE_OSVERSION=yes pkg update -f
             sudo pkg install -y bash roswell autoconf texinfo perl5 gmake gcc libffi git findutils
-            if [ "$ARCH" = "x86" ]; then sudo pkg install -y compat14x-amd64 || true; fi
+            if [ "$ARCH" = "x86" ]; then
+              sudo pkg install -y compat14x-amd64 || true
+              VER=$(uname -r | sed 's/-RELEASE.*//')
+              fetch https://download.freebsd.org/releases/amd64/amd64/${VER}-RELEASE/lib32.txz
+              sudo tar -C / -xpf lib32.txz
+              sudo ldconfig -32 /usr/lib32/
+            fi
             SBCL_OPTIONS=$SBCL_OPTIONS LISP_IMPL='ros run' gmake latest-version compile-config
       - name: make-host-1
         if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
