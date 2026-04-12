@@ -1,0 +1,15 @@
+diff --git a/find-gnumake.sh b/find-gnumake.sh
+index cb2c486c1..225e27c91 100644
+--- a/find-gnumake.sh
++++ b/find-gnumake.sh
+@@ -6,6 +6,10 @@ find_gnumake() {
+   if [ "$GNUMAKE" != "" ] ; then
+     # The user is evidently trying to tell us something.
+     GNUMAKE="$GNUMAKE"
++  elif [ -x "`command -v mingw32-make`" ] ; then
++    # mingw32-make is the native Windows make; it uses native PATH and
++    # can find the MSYS2 toolchain executables (e.g. clang on CLANGARM64).
++    GNUMAKE=mingw32-make
+   elif [ "GNU Make" = "`make -v 2>/dev/null | head -n 1 | cut -b 1-8`" ]; then
+     GNUMAKE=make
+   elif [ -x "`command -v gmake`" ] ; then
