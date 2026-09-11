@@ -1,0 +1,56 @@
+diff --git a/contrib/sb-simd/code/cpu-identification.lisp b/contrib/sb-simd/code/cpu-identification.lisp
+index 8de37e173..e35c6963e 100644
+--- a/contrib/sb-simd/code/cpu-identification.lisp
++++ b/contrib/sb-simd/code/cpu-identification.lisp
+@@ -42,24 +42,36 @@
+     (and (>= (cpuid 0) 1)
+          (logbitp 12 (nth-value 2 (cpuid 1)))))
+ 
++  ;; CPUID only says what the CPU implements.  AVX-512 instructions still
++  ;; trap with SIGILL unless the OS has enabled ZMM state in XCR0, which
++  ;; OpenBSD before 7.6 does not.  The runtime checks XCR0 at startup, so
++  ;; ask it rather than repeating the test here.
++  (defun avx512-state-enabled-p ()
++    (plusp (sb-alien:extern-alien "avx512_supported" sb-alien:int)))
++
+   (defun avx512f-supported-p ()
+-    (and (>= (cpuid 0) 7)
++    (and (avx512-state-enabled-p)
++         (>= (cpuid 0) 7)
+          (logbitp 16 (nth-value 1 (cpuid 7 0)))))
+ 
+   (defun avx512dq-supported-p ()
+-    (and (>= (cpuid 0) 7)
++    (and (avx512-state-enabled-p)
++         (>= (cpuid 0) 7)
+          (logbitp 17 (nth-value 1 (cpuid 7 0)))))
+ 
+   (defun avx512cd-supported-p ()
+-    (and (>= (cpuid 0) 7)
++    (and (avx512-state-enabled-p)
++         (>= (cpuid 0) 7)
+          (logbitp 28 (nth-value 1 (cpuid 7 0)))))
+ 
+   (defun avx512bw-supported-p ()
+-    (and (>= (cpuid 0) 7)
++    (and (avx512-state-enabled-p)
++         (>= (cpuid 0) 7)
+          (logbitp 30 (nth-value 1 (cpuid 7 0)))))
+ 
+   (defun avx512vl-supported-p ()
+-    (and (>= (cpuid 0) 7)
++    (and (avx512-state-enabled-p)
++         (>= (cpuid 0) 7)
+          (logbitp 31 (nth-value 1 (cpuid 7 0)))))
+ 
+   (defun avx512fp16-supported-p ()
+@@ -93,7 +105,8 @@
+          (logbitp 17 (nth-value 1 (cpuid #x24 0)))))
+ 
+   (defun avx10-512-supported-p ()
+-    (and (avx10-supported-p)
++    (and (avx512-state-enabled-p)
++         (avx10-supported-p)
+          (>= (cpuid 0) #x24)
+          (logbitp 18 (nth-value 1 (cpuid #x24 0))))))
+ 
