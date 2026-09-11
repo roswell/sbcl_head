@@ -74,7 +74,7 @@ jobs:
         continue-on-error: true
       - name: Config on ${{ matrix.os }}
         if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
-        uses: cross-platform-actions/action@v0.29.0
+        uses: cross-platform-actions/action@v1.4.0
         with:
           environment_variables: VERSION ARCH IMAGE SUFFIX LINKFLAGS GH_USER GH_REPO GITHUB_OAUTH_TOKEN
           operating_system: ${{ matrix.os }}
@@ -96,7 +96,7 @@ jobs:
           make -C sbcl/tools-for-build perfecthash || true
       - name: build-runtime on ${{ matrix.os }}
         if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
-        uses: cross-platform-actions/action@v0.29.0
+        uses: cross-platform-actions/action@v1.4.0
         with:
           environment_variables: VERSION ARCH IMAGE SUFFIX LINKFLAGS GH_USER GH_REPO GITHUB_OAUTH_TOKEN
           operating_system: ${{ matrix.os }}
@@ -123,7 +123,7 @@ jobs:
           if-no-files-found: ignore
       - name: build-target2 and contrib on ${{ matrix.os }}
         if: ${{ steps.check_uploaded.outcome == 'failure' || github.event_name != 'schedule' }}
-        uses: cross-platform-actions/action@v0.29.0
+        uses: cross-platform-actions/action@v1.4.0
         with:
           environment_variables: VERSION ARCH IMAGE SUFFIX LINKFLAGS GH_USER GH_REPO GITHUB_OAUTH_TOKEN
           operating_system: ${{ matrix.os }}
