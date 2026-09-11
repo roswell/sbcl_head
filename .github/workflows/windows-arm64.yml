@@ -22,6 +22,7 @@ jobs:
       ARCH: ${{ matrix.target }}
       VERSION: ${{ secrets.VERSION }}
       GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SBCL_PATCH: 20260412_windows-arm64-ucrt
 
     environment: SET_VERSION
 

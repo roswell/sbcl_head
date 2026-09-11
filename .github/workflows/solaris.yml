@@ -23,7 +23,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sbclpatch: [""]
         os: ['omnios', 'solaris']
         suffix: ['']
         target: ['x86-64', 'x86']
@@ -31,6 +30,7 @@ jobs:
           # default lisp used is sbcl-bin/2.4.8
           - lisp: 'sbcl-bin/2.4.8'
           - {suffix: '',sbcloptions: '--fancy'}
+          - {target: 'x86',sbclpatch: '20260328_sunos-x86-lfs'}
     environment: SET_VERSION
 
     steps:
