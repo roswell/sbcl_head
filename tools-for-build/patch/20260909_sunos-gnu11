@@ -1,0 +1,25 @@
+diff --git a/contrib/sb-grovel/def-to-lisp.lisp b/contrib/sb-grovel/def-to-lisp.lisp
+index 82f8481..512bee6 100644
+--- a/contrib/sb-grovel/def-to-lisp.lisp
++++ b/contrib/sb-grovel/def-to-lisp.lisp
+@@ -228,6 +228,7 @@ int main(int argc, char *argv[]) {
+                   (or (sb-ext:posix-getenv "SBCL_MACOSX_VERSION_MIN")
+                       "10.4")))
+        #+(and x86-64 sunos) '("-m64")
++       #+(and x86 sunos) '("-m32")
+        (list "-o" (namestring exefile) (namestring sourcefile)))
+       :search t
+       :input nil
+diff --git a/src/runtime/Config.x86-sunos b/src/runtime/Config.x86-sunos
+index 10635d1..b5c1ed6 100644
+--- a/src/runtime/Config.x86-sunos
++++ b/src/runtime/Config.x86-sunos
+@@ -10,7 +10,7 @@
+ # files for more information.
+ 
+ CC=gcc
+-CFLAGS += -g -O2 -Wall -D__EXTENSIONS__ -DSVR4 -D_REENTRANT -fno-omit-frame-pointer -D_POSIX_PTHREAD_SEMANTICS -m32
++CFLAGS += -g -O2 -Wall -std=gnu11 -D__EXTENSIONS__ -DSVR4 -D_REENTRANT -fno-omit-frame-pointer -D_POSIX_PTHREAD_SEMANTICS -m32
+ LINKFLAGS += -m32
+ GREP = ggrep
+ 

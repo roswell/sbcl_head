@@ -1,0 +1,30 @@
+diff --git a/src/code/target-load.lisp b/src/code/target-load.lisp
+index 18ff585f5..57c286074 100644
+--- a/src/code/target-load.lisp
++++ b/src/code/target-load.lisp
+@@ -65,13 +65,21 @@
+      (labels ((condition-herald (c)
+                 (declare (ignore c)) ; propagates up
+                 (when (form-tracking-stream-p stream)
++                  ;; The herald is only a hint about where we are. If the
++                  ;; position is unknown because FILE-POSITION was used,
++                  ;; say less rather than signalling over the condition
++                  ;; that is being reported.
+                   (let* ((startpos
+                           (form-tracking-stream-form-start-char-pos stream))
+-                         (point (line/col-from-charpos stream startpos)))
+-                    (format *error-output* "~&While evaluating the form ~
++                         (point (and startpos
++                                     (line/col-from-charpos stream startpos))))
++                    (if point
++                        (format *error-output* "~&While evaluating the form ~
+  starting at line ~D, column ~D~%  of ~S:"
+-                            (car point) (cdr point)
+-                            (or pathname stream)))))
++                                (car point) (cdr point)
++                                (or pathname stream))
++                        (format *error-output* "~&While evaluating a form of ~S:"
++                                (or pathname stream))))))
+               (eval-form (form index)
+                (with-simple-restart (continue "Ignore error and continue ~A file ~S."
+                                               context native)
