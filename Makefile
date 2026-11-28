@@ -26,7 +26,7 @@ DOCKER_IMAGE_SUFFIX ?=
 IMAGE ?=
 DOCKER_ACTION ?= bash ./tools-for-build/$(IMAGE)/setup;make docker-default-action
 
-ZSTD_BRANCH ?= v1.5.7
+ZSTD_BRANCH ?= v1.6.0
 
 #version
 version: web.ros
